@@ -1,60 +1,70 @@
----
-title: "Reproducible Research: Peer Assessment 1"
-output: 
- html_document:
- keep_md: true
----
+PA1\_template
+================
 
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE,fig.path='Figs/')
-```
+Report
+======
 
-# Report
+Data loading
+------------
 
-## Data loading
-```{r}
+``` r
 dataURL<-"https://raw.githubusercontent.com/denismoroz1981/RepData_PeerAssessment1/master/activity.csv"
 mData<-read.csv(dataURL)
 ```
 
-## What is mean total number of steps taken per day?
+What is mean total number of steps taken per day?
+-------------------------------------------------
 
 Histogram with total numbers per days is below.
-```{r }
+
+``` r
 library(plyr)
 mDataSumm<-ddply(mData,"date",summarise,total=sum(steps,na.rm = TRUE))
 hist(mDataSumm$total)
 ```
 
-```{r}
+![](PA1_template_files/figure-markdown_github/unnamed-chunk-2-1.png)
+
+``` r
 mDataSummMean<-mean(mDataSumm$total)
 mDataSummMedian<-median(mDataSumm$total)
 ```
-Mean of total number of steps taken per day is `r mDataSummMean`, the mediam is `r mDataSummMedian`.
 
-## What is the average daily activity pattern?
+Mean of total number of steps taken per day is 9354.2295082, the mediam is 10395.
+
+What is the average daily activity pattern?
+-------------------------------------------
 
 Plot of 5-minute interval and the average number steps taken is below.
-```{r}
+
+``` r
 mDataAverage<-ddply(mData,"interval",summarise,mean=mean(steps,na.rm = TRUE))
 plot(mDataAverage$interval,mDataAverage$mean,type = "l")
 ```
 
+![](PA1_template_files/figure-markdown_github/unnamed-chunk-4-1.png)
+
 Interval containing the maximum number of steps on average is below.
 
-```{r}
+``` r
 mDataAverage[which.max(mDataAverage$mean),]
 ```
 
-## Imputing missing values
+    ##     interval     mean
+    ## 104      835 206.1698
 
-```{r}
+Imputing missing values
+-----------------------
+
+``` r
 countNA<-sum(is.na(mData$steps))
 ```
-Total number of missing values is `r countNA`
+
+Total number of missing values is 2304
 
 Strategy for filling in missing values is the mean for respective 5 minute interval.
-```{r}
+
+``` r
 mDataImp<-mData
 filling<-function(steps,interval){
  mean<-mean(mDataImp$steps[mDataImp$interval==interval],na.rm=TRUE)
@@ -66,17 +76,24 @@ mDataImp$steps<-mapply(filling,mDataImp$steps,mDataImp$interval)
 
 Histogram of total step taking each date is below.
 
-```{r}
+``` r
 mDataImpSumm<-ddply(mDataImp,"date",summarise,total=sum(steps,na.rm = TRUE))
 hist(mDataImpSumm$total)
+```
+
+![](PA1_template_files/figure-markdown_github/unnamed-chunk-8-1.png)
+
+``` r
 mDataImpSummMean<-as.integer(mean(mDataImpSumm$total))
 mDataImpSummMedian<-as.integer(median(mDataImpSumm$total))
 ```
-Having missing vlues imputed, mean of total number of steps taken per day is `r mDataImpSummMean`, the mediam is `r mDataImpSummMedian`. The values are higher then when calculated w/o imputing missing values.
 
-## Are there differences in activity patterns between weekdays and weekends?
+Having missing vlues imputed, mean of total number of steps taken per day is 10766, the mediam is 10766. The values are higher then when calculated w/o imputing missing values.
 
-```{r}
+Are there differences in activity patterns between weekdays and weekends?
+-------------------------------------------------------------------------
+
+``` r
 mDataImpWW<-mDataImp
 mDataImpWW$date<-as.Date(mDataImpWW$date)
 mDataImpWW$WW<-lapply(mDataImpWW$date,weekdays)
@@ -88,5 +105,6 @@ mDataImpWW$isweekend<-unlist(mDataImpWW$isweekend)
 mDataImpWWSumm<-ddply(mDataImpWW,c("interval","isweekend"),summarise,average=mean(steps))
 library(lattice)
 xyplot(average~interval|isweekend,data=mDataImpWWSumm,layout=c(1,2),type="l")
-
 ```
+
+![](PA1_template_files/figure-markdown_github/unnamed-chunk-9-1.png)
